@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kinderjoy Seriennummer → Figur (Stranger Things)</title>
+  <style>
+    :root { --bg:#0b1020; --card:#121935; --muted:#95a3b3; --accent:#8ad0ff; --ok:#a7f3d0; --warn:#ffd166; }
+    *{box-sizing:border-box}
+    body{margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; background:linear-gradient(180deg,#0b1020,#0c142a); color:#e9eef5}
+    .wrap{max-width:980px;margin:36px auto;padding:0 16px}
+    h1{font-size:clamp(1.4rem,2.5vw,2rem);margin:0 0 12px 0}
+    p.lead{color:var(--muted);margin:0 0 18px 0}
+    .card{background:var(--card);border:1px solid #1f2a4a;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.25);padding:18px}
+    .grid{display:grid;gap:14px}
+    @media(min-width:900px){.grid{grid-template-columns:1.4fr .6fr}}
+    label{display:block;font-size:.9rem;margin-bottom:6px;color:#c8d3e4}
+    input,textarea,button,select{width:100%;padding:12px 14px;border-radius:12px;border:1px solid #243154;background:#0c1328;color:#e9eef5}
+    input:focus,textarea:focus,select:focus{outline:2px solid var(--accent);border-color:var(--accent)}
+    textarea{min-height:120px;resize:vertical;font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .btn{cursor:pointer;background:linear-gradient(180deg,#1f76ff,#1856c4);border:none}
+    .btn.secondary{background:#192344}
+    .pill{display:inline-block;padding:4px 10px;border-radius:999px;background:#0e1b39;border:1px solid #253463;color:#b9c7d9;font-size:.85rem}
+    .result{padding:14px;border-radius:12px;background:#0b1531;border:1px solid #233159}
+    .ok{color:#0bb87f}
+    .warn{color:#ffcc66}
+    .muted{color:var(--muted)}
+    .list{display:flex;flex-wrap:wrap;gap:8px}
+    .list .chip{background:#111a34;border:1px solid #22315a;border-radius:999px;padding:6px 10px}
+    .table{width:100%;border-collapse:collapse;margin-top:8px}
+    .table th,.table td{padding:10px;border-bottom:1px solid #22315a;text-align:left}
+    .footer{margin-top:14px;color:var(--muted);font-size:.9rem}
+    .badge{padding:2px 8px;border:1px solid #2b3a63;border-radius:999px;background:#101939;margin-left:6px;font-size:.8rem}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>🔍 Kinderjoy Seriennummer → Figur (Stranger Things)</h1>
+    <p class="lead">Gib eine <strong>Seriennummer</strong> ein (z.&nbsp;B. <code>22S1</code>). Optional kannst du ein <strong>Gewicht</strong> angeben, um genauer zu filtern.</p>
+
+    <div class="grid">
+      <div class="card">
+        <div class="row">
+          <div>
+            <label for="code">Seriennummer</label>
+            <input id="code" placeholder="z.B. 22S1" autocomplete="off" />
+          </div>
+          <div>
+            <label for="weight">Gewicht (g) – optional</label>
+            <input id="weight" placeholder="z.B. 31.6" inputmode="decimal" />
+          </div>
+        </div>
+        <div class="row" style="margin-top:12px">
+          <button class="btn" id="checkBtn">Ergebnis anzeigen</button>
+          <button class="btn secondary" id="resetBtn">Zurücksetzen</button>
+        </div>
+
+        <details style="margin-top:14px">
+          <summary>📥 Eigene Daten laden (CSV / Einfügen)</summary>
+          <p class="muted" style="margin:8px 0 6px">Erwarte Format: <code>Seriennummer,Figur,Gewicht_min,Gewicht_max</code>. Du kannst z.&nbsp;B. das <em>Data</em>-Tab aus deiner Excel als CSV exportieren.</p>
+          <div class="row">
+            <div>
+              <label for="csvfile">CSV-Datei wählen</label>
+              <input type="file" id="csvfile" accept=".csv" />
+            </div>
+            <div>
+              <label for="paste">…oder hier einfügen</label>
+              <textarea id="paste" placeholder="22S1,Steve,31.2,31.9
+40S1,Robin + Steve Stiftfigur,31.0,31.5"></textarea>
+            </div>
+          </div>
+          <div class="row" style="margin-top:10px">
+            <button class="btn" id="loadCsvBtn">Daten übernehmen</button>
+            <button class="btn secondary" id="sampleBtn">Beispieldaten laden</button>
+          </div>
+        </details>
+      </div>
+
+      <div class="card">
+        <div>
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <strong>Aktiver Datenstand</strong>
+            <span class="badge" id="statCount">0 Einträge</span>
+          </div>
+          <div class="result" style="margin-top:10px">
+            <div class="muted" id="datasetHint">Noch keine eigenen Daten geladen – es ist ein kleiner Beispieldatensatz aktiv. Lade unten deine CSV für echte Ergebnisse.</div>
+            <table class="table" id="previewTable" style="margin-top:8px;display:none">
+              <thead><tr><th>Seriennummer</th><th>Figur</th><th>Gewicht min–max</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <h2 style="margin:0 0 6px">Ergebnis</h2>
+      <div id="out" class="result">Gib oben eine Seriennummer ein.</div>
+      <div class="footer">Hinweis: Gewicht wird berücksichtigt, wenn es innerhalb des Bereichs der Figur liegt.</div>
+    </div>
+  </div>
+
+<script>
+  // --- Minimaler Beispieldatensatz (ersetze durch deine CSV) ---
+  let rows = [
+    // Seriennummer, Figur, min, max
+    ["4S1","Steve",31.2,31.9],
+    ["21S1","Steve",31.0,31.8],
+    ["22S1","Steve",31.0,31.8],
+    ["28S1","Steve",31.0,31.8],
+    ["29S1","Robin + Steve Stiftfigur",31.1,31.7],
+    ["40S1","Robin + Steve Stiftfigur",31.0,31.6],
+    ["44S1","Robin + Steve Stiftfigur",31.0,31.6],
+    ["25S1","Hopper upside Down",30.7,31.0],
+    ["31S1","Max upside Down",30.0,30.5],
+    ["48S1","Demogorgon",31.3,31.9]
+  ];
+
+  const codeEl = document.getElementById('code');
+  const weightEl = document.getElementById('weight');
+  const outEl = document.getElementById('out');
+  const statCount = document.getElementById('statCount');
+  const datasetHint = document.getElementById('datasetHint');
+  const previewTable = document.getElementById('previewTable');
+
+  function updateStats(){
+    statCount.textContent = rows.length + ' Einträge';
+    renderPreview();
+  }
+
+  function renderPreview(){
+    const tbody = previewTable.querySelector('tbody');
+    tbody.innerHTML = '';
+    const take = Math.min(8, rows.length);
+    for(let i=0;i<take;i++){
+      const r = rows[i];
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${r[0]}</td><td>${r[1]}</td><td>${fmt(r[2])}–${fmt(r[3])} g</td>`;
+      tbody.appendChild(tr);
+    }
+    previewTable.style.display = take? 'table' : 'none';
+  }
+
+  function fmt(n){ return (typeof n==='number' && !isNaN(n)) ? n.toFixed(1) : '–'; }
+
+  function findMatches(code, weight){
+    const c = (code||'').toUpperCase().trim();
+    let list = rows.filter(r => r[0]===c);
+    if(weight!=null && !isNaN(weight)){
+      const w = Number(weight);
+      const exact = list.filter(r => (typeof r[2]==='number' && typeof r[3]==='number' && w>=r[2] && w<=r[3]));
+      if(exact.length) return {mode:'exact', list:dedupFigures(exact)};
+      // sonst: nach Abstand zum Intervallmittel sortieren
+      list = list.map(r=>({r, d: (typeof r[2]==='number'&&typeof r[3]==='number') ? Math.abs(w-((r[2]+r[3])/2)) : 999})).sort((a,b)=>a.d-b.d).map(x=>x.r);
+      return {mode:'nearest', list:dedupFigures(list)};
+    }
+    return {mode:'code', list:dedupFigures(list)};
+  }
+
+  function dedupFigures(list){
+    const seen = new Set();
+    const out = [];
+    for(const r of list){
+      if(!seen.has(r[1]]){ seen.add(r[1]); out.push(r); }
+    }
+    return out;
+  }
+
+  function renderResult(res, code, weight){
+    if(!res.list.length){
+      outEl.innerHTML = `<div class="muted">Keine Treffer für <strong>${code||'–'}</strong>${weight?` bei ${weight} g`:''}. Lade deine CSV oder prüfe Nummer/Gewicht.</div>`;
+      return;
+    }
+    const chips = res.list.map(r=>`<span class="chip">${r[1]} <span class="muted">(${fmt(r[2])}–${fmt(r[3])} g)</span></span>`).join(' ');
+    const modeTxt = res.mode==='exact'? '<span class="ok">Exakter Gewichtstreffer</span>' : (res.mode==='code'? '<span class="warn">Nur nach Seriennummer</span>' : '<span class="warn">Nächstliegend nach Gewicht</span>');
+    outEl.innerHTML = `
+      <div class="list">${chips}</div>
+      <div style="margin-top:8px" class="muted">Modus: ${modeTxt}</div>
+    `;
+  }
+
+  document.getElementById('checkBtn').addEventListener('click', ()=>{
+    const code = codeEl.value;
+    const wtxt = (weightEl.value||'').replace(',', '.');
+    const w = wtxt? Number(wtxt) : null;
+    const res = findMatches(code, w);
+    renderResult(res, code, w);
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', ()=>{
+    codeEl.value = '';
+    weightEl.value = '';
+    outEl.textContent = 'Gib oben eine Seriennummer ein.';
+  });
+
+  // CSV loader
+  function parseCSV(text){
+    // very simple CSV: split by lines, then by comma; trims; ignores empty
+    const lines = text.split(/\r?\n/).filter(l=>l.trim().length);
+    const out=[];
+    for(const line of lines){
+      // accommodate semicolons too
+      const raw = line.includes(';') && !line.includes(',') ? line.split(';') : line.split(',');
+      const a = raw.map(x=>x.trim());
+      if(a.length>=2){
+        const code = a[0].toUpperCase();
+        const fig = a[1];
+        const lo = a[2]? Number(a[2].replace(',', '.')) : NaN;
+        const hi = a[3]? Number(a[3].replace(',', '.')) : NaN;
+        out.push([code, fig, isNaN(lo)? undefined : lo, isNaN(hi)? undefined : hi]);
+      }
+    }
+    return out;
+  }
+
+  document.getElementById('loadCsvBtn').addEventListener('click', ()=>{
+    const ta = document.getElementById('paste').value.trim();
+    if(ta){
+      rows = parseCSV(ta);
+      datasetHint.textContent = 'Eigene Daten aktiv.';
+      updateStats();
+      outEl.textContent = 'Daten geladen. Gib oben eine Seriennummer ein.';
+      return;
+    }
+    const file = document.getElementById('csvfile').files[0];
+    if(file){
+      const fr = new FileReader();
+      fr.onload = e => {
+        rows = parseCSV(e.target.result);
+        datasetHint.textContent = 'Eigene Daten aktiv.';
+        updateStats();
+        outEl.textContent = 'Daten geladen. Gib oben eine Seriennummer ein.';
+      };
+      fr.readAsText(file, 'utf-8');
+    }
+  });
+
+  document.getElementById('sampleBtn').addEventListener('click', ()=>{
+    function fmt(n){ return (typeof n==='number' && !isNaN(n)) ? n.toFixed(1) : ''; }
+    document.getElementById('paste').value = rows.map(r=>[r[0],r[1],fmt(r[2]),fmt(r[3])].join(',')).join('\n');
+  });
+
+  updateStats();
+</script>
+</body>
+</html>
